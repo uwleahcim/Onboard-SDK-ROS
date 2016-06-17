@@ -1,4 +1,5 @@
 #include <dji_sdk/dji_sdk_node.h>
+#include <tf/tf.h>
 #include <functional>
 #include <dji_sdk/DJI_LIB_ROS_Adapter.h>
 //----------------------------------------------------------
@@ -130,6 +131,15 @@ void DJISDKNode::broadcast_callback()
         odometry_publisher.publish(odometry);
     }
 
+    //tf for dom
+    if ( (msg_flags & HAS_POS) && (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_V) ) {
+        odom_broadcaster.sendTransform(
+                    tf::StampedTransform(
+                        tf::Transform(tf::Quaternion(attitude_quaternion.q1, attitude_quaternion.q2, attitude_quaternion.q3, attitude_quaternion.q0),
+                                      tf::Vector3(local_position.x, local_position.y, local_position.z)),
+                        current_time, "/world", "/base_link"));
+    }
+
 /******************************************************************
 ****************************If using A3****************************
 ******************************************************************/
@@ -229,7 +239,8 @@ void DJISDKNode::broadcast_callback()
 
     else {
 
-     	if (msg_flags & HAS_GIMBAL) {
+        //update gimbal msg
+        if (msg_flags & HAS_GIMBAL) {
         	gimbal.header.frame_id = "/gimbal";
         	gimbal.header.stamp= current_time;
         	gimbal.ts = bc_data.timeStamp.time;
@@ -238,6 +249,20 @@ void DJISDKNode::broadcast_callback()
         	gimbal.yaw = bc_data.gimbal.yaw;
         	gimbal_publisher.publish(gimbal);
     	}
+
+        //tf for gimbal
+        //TODO: Add for A3,
+        //  Add translation Vector
+        //  Double Check if tf is correct
+        if (msg_flags & HAS_GIMBAL) {
+            tf::Quaternion gimbalQuat;
+            gimbalQuat.setEuler(bc_data.gimbal.yaw, bc_data.gimbal.pitch, bc_data.gimbal.roll);
+
+            gimbal_broadcaster.sendTransform(
+                        tf::StampedTransform(
+                            tf::Transform(gimbalQuat, tf::Vector3(0.0, 0.0, 0.0)),
+                            current_time, "/base_link", "/gimbal"));
+        }
 
     	//update rc_channel msg
     	if (msg_flags & HAS_RC) {
