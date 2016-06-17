@@ -330,11 +330,11 @@ int main(int argc, char **argv)
                 break;
             case 'n':
                 /* Local Navi Test */
-                drone->local_position_navigation_send_request(-100, -100, 100);
+                drone->local_position_navigation_send_request(-100, -100, 100, 0);
                 break;
             case 'o':
                 /* GPS Navi Test */
-                drone->global_position_navigation_send_request(22.535, 113.95, 100);
+                drone->global_position_navigation_send_request(22.535, 113.95, 100, 0);
                 break;
             case 'p':
                 /* Waypoint List Navi Test */
